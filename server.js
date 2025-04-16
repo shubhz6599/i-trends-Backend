@@ -9,7 +9,12 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cors());
+const corsOptions = {
+  origin: 'https://i-trends-85dd4.web.app', // 👈 Replace with your actual deployed Angular URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true // if you're using cookies or auth headers
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
