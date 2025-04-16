@@ -171,7 +171,15 @@ const getUserDetails = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     res.json({
-      user,
+       user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        dob: user.dob, // Include date of birth
+        phone: user.mobile, // Include phone number
+        isOtpVerified: user.isOtpVerified,
+        resendOtpCount: user.resendOtpCount,
+      },
       isOtpVerified: user.isOtpVerified // Include OTP verification status
     });
   } catch (err) {
