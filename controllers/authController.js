@@ -187,6 +187,7 @@ module.exports = {
   forgotPassword,
   resetPassword,
   verifyOtp,
+  resendOtp,
   getUserDetails,
   updateUserDetails
 };
