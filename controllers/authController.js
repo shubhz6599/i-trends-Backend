@@ -65,10 +65,25 @@ const resendOtp = async (req, res) => {
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    const now = Date.now();
+
+    // Enforce the 24-hour limit
+    if (user.resendOtpCount >= 3 && user.lastResendTimestamp && now - user.lastResendTimestamp.getTime() < 24 * 60 * 60 * 1000) {
+      return res.status(429).json({ message: "You have exceeded the OTP resend limit. Please try again after 24 hours." });
+    }
+
+    // Reset count if 24 hours have passed since last resend
+    if (user.lastResendTimestamp && now - user.lastResendTimestamp.getTime() >= 24 * 60 * 60 * 1000) {
+      user.resendOtpCount = 0; // Reset resend count
+    }
+
     // Generate a new OTP
     const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
     user.otp = otp;
     user.otpExpiry = Date.now() + 300000; // OTP valid for 5 minutes
+    user.resendOtpCount += 1;
+    user.lastResendTimestamp = new Date();
+    
     await user.save();
 
     // Send OTP via email
