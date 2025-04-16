@@ -24,6 +24,13 @@ const userSchema = new mongoose.Schema({
   },
   otp: String, // OTP for email verification
   otpExpiry: Date,
+   resendOtpCount: {
+    type: Number,
+    default: 0 // Tracks how many times the user has requested OTP
+  },
+  lastResendTimestamp: {
+    type: Date, // Tracks the last time OTP was resent
+  },
   isOtpVerified: {
     type: Boolean,
     default: false // Default to false until verified
