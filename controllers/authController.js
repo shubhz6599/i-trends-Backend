@@ -16,7 +16,7 @@ const signup = async (req, res) => {
     const otpExpiry = Date.now() + 300000; // OTP valid for 5 minutes
 
     
-    const user = await User.create({ name, email, password: hashed dob, mobile, otp, otpExpiry });
+    const user = await User.create({ name, email, password: hashed, dob, mobile, otp, otpExpiry });
 
     await sendEmail(
     user.email,
