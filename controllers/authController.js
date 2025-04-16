@@ -46,13 +46,16 @@ const verifyOtp = async (req, res) => {
     user.otpExpiry = undefined;
     user.isOtpVerified = true;
     await user.save();
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    
       await sendEmail(
       user.email,
       "OTP Verified Successfully",
       `<p>Thank you for verifying your email. Your account is now active.</p>`
     );
 
-    res.json({ message: "Email verified successfully" });
+    res.json({ message: "Email verified successfully" , token});
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
