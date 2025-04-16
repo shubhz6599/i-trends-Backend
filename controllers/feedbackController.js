@@ -1,6 +1,6 @@
 const Feedback = require("../models/Feedback");
 
-export const submitFeedback = async (req, res) => {
+const submitFeedback = async (req, res) => {
   try {
     // Convert the structured feedback to a JSON string
     const feedbackMessage = JSON.stringify(req.body);
@@ -18,7 +18,7 @@ export const submitFeedback = async (req, res) => {
   }
 };
 
-export const getMyFeedback = async (req, res) => {
+const getMyFeedback = async (req, res) => {
   try {
     // Find feedback for the logged-in user
     const feedbacks = await Feedback.find({ userId: req.user.id });
@@ -34,4 +34,9 @@ export const getMyFeedback = async (req, res) => {
     console.error('Error fetching feedback:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+};
+
+module.exports = {
+  submitFeedback,
+  getMyFeedback
 };
