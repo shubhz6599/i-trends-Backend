@@ -10,7 +10,7 @@ connectDB();
 
 const app = express();
 const corsOptions = {
-  origin: ['https://i-trends-85dd4.web.app', 'http://localhost:4200/home']
+  origin: ['https://i-trends-85dd4.web.app', 'http://localhost:4200']
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true 
 };
