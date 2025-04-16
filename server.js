@@ -9,10 +9,12 @@ connectDB();
 
 const app = express();
 app.use(
-    cors({
-      origin: ["http://localhost:4200"]
-    })
-  );
+  cors({
+    origin: ["http://localhost:4200", "https://i-trends-backend-production.up.railway.app"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true // Allow credentials if needed
+  })
+);
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
