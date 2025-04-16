@@ -24,6 +24,10 @@ const userSchema = new mongoose.Schema({
   },
   otp: String, // OTP for email verification
   otpExpiry: Date,
+  isOtpVerified: {
+    type: Boolean,
+    default: false // Default to false until verified
+  },
   resetToken: String,
   resetTokenExpiry: Date
 });
