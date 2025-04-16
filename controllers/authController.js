@@ -5,14 +5,48 @@ const User = require("../models/User");
 const sendEmail = require("../utils/sendEmail");
 
 const signup = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, dob, mobile } = req.body;
   try {
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: "User already exists" });
 
     const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email, password: hashed });
+
+    const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+    const otpExpiry = Date.now() + 300000; // OTP valid for 5 minutes
+
+    
+    const user = await User.create({ name, email, password: hashed dob, mobile, otp, otpExpiry });
+
+    await sendEmail(
+    user.email,
+    "Verify Your Email",
+    `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`
+    );
     res.status(201).json({ message: "User registered successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const verifyOtp = async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Check if OTP matches and is not expired
+    if (user.otp !== otp || user.otpExpiry < Date.now()) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    // Clear OTP fields after successful verification
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+    await user.save();
+
+    res.json({ message: "Email verified successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -85,5 +119,6 @@ module.exports = {
   signup,
   login,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  verifyOtp 
 };
