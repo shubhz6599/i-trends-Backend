@@ -1,9 +1,9 @@
-import express from 'express';
-import { getCart, addToCart, removeFromCart } from '../controllers/cartController.js';
-import { placeOrder, getMyOrders, trackOrder } from '../controllers/orderController.js';
-import { submitFeedback, getMyFeedback } from '../controllers/feedbackController.js';
-import { getAllOrders, getAllFeedback, exportOrdersToExcel } from '../controllers/adminController.js';
-import auth from '../middleware/authMiddleware.js';
+const express = require('express');
+const { getCart, addToCart, removeFromCart } = require('../controllers/cartController.js');
+const { placeOrder, getMyOrders, trackOrder } = require('../controllers/orderController.js');
+const { submitFeedback, getMyFeedback } = require('../controllers/feedbackController.js');
+const { getAllOrders, getAllFeedback, exportOrdersToExcel } = require('../controllers/adminController.js');
+const auth = require('../middleware/authMiddleware.js');
 
 const router = express.Router();
 
