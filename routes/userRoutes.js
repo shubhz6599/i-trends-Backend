@@ -24,4 +24,4 @@ router.get('/admin/orders', getAllOrders);
 router.get('/admin/feedback', getAllFeedback);
 router.get('/admin/export-orders', exportOrdersToExcel);
 
-export default router;
+module.exports = router;
