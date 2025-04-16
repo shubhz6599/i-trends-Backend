@@ -147,10 +147,46 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const getUserDetails = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password"); // Exclude password
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({
+      user,
+      isOtpVerified: user.isOtpVerified // Include OTP verification status
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const updateUserDetails = async (req, res) => {
+  const { name, dob, mobile } = req.body;
+  try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Update user details
+    if (name) user.name = name;
+    if (dob) user.dob = dob;
+    if (mobile) user.mobile = mobile;
+
+    await user.save();
+
+    res.json({ message: "User details updated successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 module.exports = {
   signup,
   login,
   forgotPassword,
   resetPassword,
-  verifyOtp 
+  verifyOtp,
+  getUserDetails,
+  updateUserDetails
 };
