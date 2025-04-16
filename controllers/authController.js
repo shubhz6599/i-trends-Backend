@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../models/User");
 const sendEmail = require("../utils/sendEmail");
+const otpCache = require("../utils/otpCache");
 
 const signup = async (req, res) => {
   const { name, email, password, dob, mobile } = req.body;
@@ -10,20 +11,22 @@ const signup = async (req, res) => {
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: "User already exists" });
 
-    const hashed = await bcrypt.hash(password, 10);
-
     const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
-    const otpExpiry = Date.now() + 300000; // OTP valid for 5 minutes
+    const otpExpiry = Date.now() + 5 * 60 * 1000; // 5 min
 
-    
-    const user = await User.create({ name, email, password: hashed, dob, mobile, otp, otpExpiry });
+    otpCache.set(email, {
+      userData: { name, email, password, dob, mobile },
+      otp,
+      otpExpiry,
+    });
 
     await sendEmail(
-    user.email,
-    "Verify Your Email",
-    `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`
+      email,
+      "Verify Your Email",
+      `<p>Your OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`
     );
-    res.status(201).json({ message: "User registered successfully" });
+
+    res.status(200).json({ message: "OTP sent to email" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -32,34 +35,36 @@ const signup = async (req, res) => {
 const verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const cached = otpCache.get(email);
 
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    // Check if OTP matches and is not expired
-    if (user.otp !== otp || user.otpExpiry < Date.now()) {
+    if (!cached) return res.status(400).json({ message: "No OTP request found" });
+    if (cached.otp != otp || cached.otpExpiry < Date.now())
       return res.status(400).json({ message: "Invalid or expired OTP" });
-    }
 
-    // Clear OTP fields after successful verification
-    user.otp = undefined;
-    user.otpExpiry = undefined;
-    user.isOtpVerified = true;
-    await user.save();
+    // Save user to DB after successful OTP
+    const hashed = await bcrypt.hash(cached.userData.password, 10);
+    const user = await User.create({
+      ...cached.userData,
+      password: hashed,
+      isOtpVerified: true,
+    });
+
+    otpCache.delete(email); // remove temp cache
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-    
-      await sendEmail(
+
+    await sendEmail(
       user.email,
-      "OTP Verified Successfully",
-      `<p>Thank you for verifying your email. Your account is now active.</p>`
+      "OTP Verified",
+      `<p>Your email is verified. You can now login.</p>`
     );
 
-    res.json({ message: "Email verified successfully" , token});
+    res.json({ message: "Email verified successfully", token });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 const resendOtp = async (req, res) => {
   const { email } = req.body;
