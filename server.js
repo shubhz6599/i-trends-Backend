@@ -10,10 +10,18 @@ connectDB();
 
 const app = express();
 const corsOptions = {
-  origin: ['https://i-trends-85dd4.web.app', 'http://localhost:4200']
+  origin: function (origin, callback) {
+    const allowedOrigins = ['https://i-trends-85dd4.web.app', 'http://localhost:4200'];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true 
+  credentials: true
 };
+
 app.use(cors(corsOptions));
 app.use(express.json());
 
