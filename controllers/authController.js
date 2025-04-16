@@ -44,9 +44,41 @@ const verifyOtp = async (req, res) => {
     // Clear OTP fields after successful verification
     user.otp = undefined;
     user.otpExpiry = undefined;
+    user.isOtpVerified = true;
     await user.save();
+      await sendEmail(
+      user.email,
+      "OTP Verified Successfully",
+      `<p>Thank you for verifying your email. Your account is now active.</p>`
+    );
 
     res.json({ message: "Email verified successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const resendOtp = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Generate a new OTP
+    const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+    user.otp = otp;
+    user.otpExpiry = Date.now() + 300000; // OTP valid for 5 minutes
+    await user.save();
+
+    // Send OTP via email
+    await sendEmail(
+      user.email,
+      "Resend OTP",
+      `<p>Your new OTP is <b>${otp}</b>. It expires in 5 minutes.</p>`
+    );
+
+    res.json({ message: "OTP resent successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
