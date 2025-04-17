@@ -1,5 +1,5 @@
 const express = require('express');
-// const { getCart, addToCart, removeFromCart } = require('../controllers/cartController.js');
+const { getCart, addToCart, removeFromCart } = require('../controllers/cartController.js');
 // const { placeOrder, getMyOrders, trackOrder } = require('../controllers/orderController.js');
 const { submitFeedback, getMyFeedback } = require('../controllers/feedbackController.js');
 // const { getAllOrders, getAllFeedback, exportOrdersToExcel } = require('../controllers/adminController.js');
