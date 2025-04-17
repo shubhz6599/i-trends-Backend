@@ -8,9 +8,9 @@ const authenticate = require('../middleware/authMiddleware.js');
 const router = express.Router();
 
 // // user
-// router.get('/cart', authenticate, getCart);
-// router.post('/cart', authenticate, addToCart);
-// router.delete('/cart', authenticate, removeFromCart);
+router.get('/cart', authenticate, getCart);
+router.post('/cart', authenticate, addToCart);
+router.delete('/cart', authenticate, removeFromCart);
 
 // router.post('/order', authenticate, placeOrder);
 // router.get('/orders', authenticate, getMyOrders);
