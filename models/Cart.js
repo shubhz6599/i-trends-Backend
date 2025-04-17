@@ -9,8 +9,14 @@ const cartSchema = new mongoose.Schema({
       price: Number,
       quantity: Number,
       img: String,
+      actualPrice: String, 
+      discountedPrice: String, 
+      ratings: String, 
+      description: String
     },
   ],
 });
+
+  
 
 module.exports = mongoose.model('Cart', cartSchema);
