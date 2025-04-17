@@ -5,7 +5,7 @@ const getCart = async (req, res) => {
   res.json(cart || { items: [] });
 };
 
-export const addToCart = async (req, res) => {
+ const addToCart = async (req, res) => {
   const { productId, name, price, quantity, img } = req.body; // Include `img` in the request body
   let cart = await Cart.findOne({ userId: req.user.id });
   if (!cart) cart = new Cart({ userId: req.user.id, items: [] });
