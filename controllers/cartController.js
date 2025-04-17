@@ -1,11 +1,11 @@
-import Cart from '../models/Cart.js';
+const Cart = require("../models/Cart.js");
 
-export const getCart = async (req, res) => {
+const getCart = async (req, res) => {
   const cart = await Cart.findOne({ userId: req.user.id });
   res.json(cart || { items: [] });
 };
 
-export const addToCart = async (req, res) => {
+const addToCart = async (req, res) => {
   const { productId, name, price, quantity } = req.body;
   let cart = await Cart.findOne({ userId: req.user.id });
   if (!cart) cart = new Cart({ userId: req.user.id, items: [] });
@@ -21,11 +21,17 @@ export const addToCart = async (req, res) => {
   res.json(cart);
 };
 
-export const removeFromCart = async (req, res) => {
+const removeFromCart = async (req, res) => {
   const { productId } = req.body;
   let cart = await Cart.findOne({ userId: req.user.id });
   if (!cart) return res.status(404).json({ message: 'Cart not found' });
   cart.items = cart.items.filter(i => i.productId !== productId);
   await cart.save();
   res.json(cart);
+};
+
+module.exports = {
+  getCart,
+  addToCart,
+  removeFromCart
 };
