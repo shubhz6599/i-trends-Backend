@@ -2,7 +2,18 @@ const Cart = require("../models/Cart.js");
 
 const getCart = async (req, res) => {
   const cart = await Cart.findOne({ userId: req.user.id });
-  res.json(cart || { items: [] });
+    const cartWithDetails = cart?.items.map((item) => ({
+    productId: item.productId,
+    name: item.name,
+    img: item.img,
+    quantity: item.quantity,
+    actualPrice: item.actualPrice || item.price, // Add actual price
+    discountedPrice: item.discountedPrice || item.price, // Add discounted price
+    ratings: item.ratings || 4.5, // Add ratings
+    description: item.description || 'A high-quality product.', // Add description
+  }));
+
+  res.json(cartWithDetails || []);
 };
 
  const addToCart = async (req, res) => {
