@@ -17,7 +17,7 @@ const getCart = async (req, res) => {
 };
 
  const addToCart = async (req, res) => {
-  const { productId, name, price, quantity, img } = req.body; // Include `img` in the request body
+  const { productId, name, quantity, img, actualPrice, discountedPrice, ratings, description } = req.body; // Include `img` in the request body
   let cart = await Cart.findOne({ userId: req.user.id });
   if (!cart) cart = new Cart({ userId: req.user.id, items: [] });
 
@@ -27,7 +27,7 @@ const getCart = async (req, res) => {
     cart.items[itemIndex].quantity += quantity;
   } else {
     // Add new product to the cart
-    cart.items.push({ productId, name, price, quantity, img });
+    cart.items.push({ productId, name, quantity, img, actualPrice, discountedPrice, ratings, description });
   }
 
   await cart.save();
