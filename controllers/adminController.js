@@ -1,18 +1,18 @@
-import Feedback from '../models/Feedback.js';
-import Order from '../models/Order.js';
-import xlsx from 'xlsx';
+const Feedback = require("../models/Feedback.js");
+const Order = require("../models/Order.js");
+const xlsx = require('xlsx');
 
-export const getAllOrders = async (req, res) => {
+const getAllOrders = async (req, res) => {
   const orders = await Order.find().populate('userId', 'name email');
   res.json(orders);
 };
 
-export const getAllFeedback = async (req, res) => {
+const getAllFeedback = async (req, res) => {
   const feedback = await Feedback.find().populate('userId', 'name email');
   res.json(feedback);
 };
 
-export const exportOrdersToExcel = async (req, res) => {
+const exportOrdersToExcel = async (req, res) => {
   const orders = await Order.find().populate('userId', 'name email');
   const data = orders.map(o => ({
     name: o.userId.name,
@@ -27,4 +27,10 @@ export const exportOrdersToExcel = async (req, res) => {
   const filePath = '/tmp/orders.xlsx';
   xlsx.writeFile(wb, filePath);
   res.download(filePath);
+};
+
+module.exports = {
+  getAllOrders,
+  getAllFeedback,
+  exportOrdersToExcel
 };
