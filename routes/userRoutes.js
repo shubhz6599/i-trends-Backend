@@ -19,7 +19,7 @@ router.delete('/cart', authenticate, removeFromCart);
 router.post('/feedback', authenticate, submitFeedback);
 router.get('/feedback', authenticate, getMyFeedback);
 
-admin
+// admin
 router.get('/admin/orders', getAllOrders);
 router.get('/admin/feedback', getAllFeedback);
 router.get('/admin/export-orders', exportOrdersToExcel);
