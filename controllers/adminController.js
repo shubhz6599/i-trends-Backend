@@ -29,8 +29,40 @@ const exportOrdersToExcel = async (req, res) => {
   res.download(filePath);
 };
 
+
+const updateOrderStatus = async (req, res) => {
+  const { orderId } = req.params;
+  const { status } = req.body;
+
+  try {
+    const update = { status };
+    if (status.startsWith('shippedto')) {
+      update.currentCity = status.replace('shippedto', '');
+    }
+
+    const order = await Order.findByIdAndUpdate(orderId, update, { new: true });
+
+    // Email on delivery day
+    if (status === 'deliveryday') {
+      await sendEmail(order.userId, 'Your Order is Out for Delivery', `
+        <h3>Your order will arrive today!</h3>
+        <ul>
+          ${order.items.map(i => `<li>${i.name} - ${i.quantity}</li>`).join('')}
+        </ul>
+      `);
+    }
+
+    res.json({ success: true, order });
+  } catch (error) {
+    console.error('Status update error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+
 module.exports = {
   getAllOrders,
   getAllFeedback,
-  exportOrdersToExcel
+  exportOrdersToExcel,
+  updateOrderStatus
 };

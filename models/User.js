@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false // Default to false until verified
   },
+  isAdmin: { type: Boolean, default: false },
   resetToken: String,
   resetTokenExpiry: Date
 });

@@ -5,6 +5,7 @@ const orderSchema = new mongoose.Schema({
     items: Array,
     totalAmount: Number,
     status: { type: String, default: 'Processing' },
+    currentCity: String,
     createdAt: { type: Date, default: Date.now },
   });
   
