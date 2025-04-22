@@ -4,6 +4,8 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const sendEmail = require("../utils/sendEmail");
 const otpCache = require("../utils/otpCache");
+const Payment = require("../models/payment")
+const razorpayInstance = require("../middleware/razorPayInstance")
 
 const signup = async (req, res) => {
   const { name, email, password, dob, mobile } = req.body;
@@ -216,6 +218,68 @@ const updateUserDetails = async (req, res) => {
   }
 };
 
+
+const createOrder = async (req, res) => {
+  const paymentOptions = {
+      amount: req.body.amount * 100, // Convert to smallest currency unit (e.g., paise)
+      currency: "INR",
+      receipt: "receipt_" + new Date().getTime(),
+      payment_capture: 1 // Auto-capture payment
+  };
+
+  try {
+      const response = await razorpayInstance.orders.create(paymentOptions);
+      res.json({ success: true, order: response });
+  } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+const verifyPayment = async (req, res) => {
+  const {
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+    cartItems,     
+    amount
+  } = req.body;
+
+  const generatedSignature = crypto
+    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    .update(razorpay_order_id + "|" + razorpay_payment_id)
+    .digest('hex');
+
+  if (generatedSignature === razorpay_signature) {
+    // Save Payment Info (optional)
+    const payment = new Payment({
+      order_id: razorpay_order_id,
+      payment_id: razorpay_payment_id,
+      signature: razorpay_signature,
+      amount,
+      status: "Success"
+    });
+    await payment.save();
+
+    // Save Order Info
+    const order = new Order({
+      userId: req.user._id,       // ⬅️ assumes you're using `authenticate` middleware
+      items: cartItems,
+      totalAmount: amount,
+      status: "processing",
+      paymentId: razorpay_payment_id
+    });
+    await order.save();
+
+    return res.json({ success: true, message: "Payment verified and order saved" });
+  } else {
+    return res.status(400).json({ success: false, message: "Invalid payment signature" });
+  }
+};
+
+
+
 module.exports = {
   signup,
   login,
@@ -224,5 +288,7 @@ module.exports = {
   verifyOtp,
   resendOtp,
   getUserDetails,
-  updateUserDetails
+  updateUserDetails,
+  createOrder,
+  verifyPayment
 };
