@@ -150,6 +150,8 @@ const trackOrder = async (req, res) => {
 
 module.exports = {
   placeOrder,
+  getOrdersByUser,
+  getOrderDetailsById,
   getMyOrders,
   trackOrder
 };
