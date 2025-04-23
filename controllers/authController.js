@@ -220,7 +220,7 @@ const updateUserDetails = async (req, res) => {
 };
 
 const createOrder = async (req, res) => {
-  const { items, amount } = req.body; // Receive product details and amount from frontend
+  const { items, amount } = req.body;
 
   if (!items || items.length === 0) {
     return res.status(400).json({ success: false, message: "No items provided for order" });
@@ -236,15 +236,22 @@ const createOrder = async (req, res) => {
   try {
     const razorpayResponse = await razorpayInstance.orders.create(paymentOptions);
 
-    // Store Razorpay order ID and product details temporarily in the database
-    const tempOrder = {
+    // Map items to TempOrder schema and store them in the database
+    const tempOrders = items.map((item) => ({
       razorpay_order_id: razorpayResponse.id, // Razorpay Order ID
-      items, // Store product details
-      amount,
-      status: "created", // Initially set status as "created"
-    };
+      productId: item.productId,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      variant: item.variant,
+      imageUrl: item.imageUrl,
+      mainOption: item.mainOption,
+      subOption: item.subOption,
+      amount, // Total order amount
+      status: "created",
+    }));
 
-    await TempOrder.create(tempOrder); // Save to TempOrder collection
+    await TempOrder.insertMany(tempOrders); // Save all items in TempOrder collection
 
     res.json({ success: true, order: razorpayResponse });
   } catch (error) {
@@ -252,7 +259,6 @@ const createOrder = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 
 const verifyPayment = async (req, res) => {
@@ -265,7 +271,7 @@ const verifyPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
-    // Generate signature
+    // Generate the signature for validation
     const generatedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(razorpay_order_id + "|" + razorpay_payment_id)
@@ -277,20 +283,15 @@ const verifyPayment = async (req, res) => {
     if (generatedSignature === razorpay_signature) {
       console.log("Payment verified successfully");
 
-      // Update temporary order status to "verified"
-      const tempOrder = await TempOrder.findOne({ razorpay_order_id });
+      // Update TempOrder status to "verified"
+      await TempOrder.updateMany({ razorpay_order_id }, { status: "verified" });
 
-      if (!tempOrder) {
-        return res.status(404).json({ success: false, message: "Order not found" });
-      }
-
-      tempOrder.status = "verified"; // Update status to "verified"
-      await tempOrder.save();
+      const updatedOrders = await TempOrder.find({ razorpay_order_id }); // Fetch updated orders
 
       res.json({
         success: true,
         message: "Payment verified successfully",
-        order: tempOrder,
+        orders: updatedOrders,
       });
     } else {
       console.error("Signature mismatch!");
@@ -298,7 +299,7 @@ const verifyPayment = async (req, res) => {
     }
   } catch (error) {
     console.error("Error in verifyPayment:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
