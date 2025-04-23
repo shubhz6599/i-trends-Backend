@@ -71,27 +71,20 @@ const placeOrder = async (req, res) => {
 const confirmOrder = async (req, res) => {
   try {
     const { paymentId, totalAmount, items } = req.body;
-    const userId = req.user._id; // from authenticate middleware
+    const userId = req.user._id;
 
-    if (!paymentId || !totalAmount || !items || items.length === 0) {
-      return res.status(400).json({ message: "Missing required fields" });
+    const existingOrder = await Order.findOne({ paymentId });
+    if (existingOrder) {
+      return res.status(200).json({ success: true, message: "Order already confirmed", order: existingOrder });
     }
 
-    const newOrder = await Order.create({
-      userId,
-      items,
-      totalAmount,
-      paymentId,
-      status: "processing"
-    });
-
+    const newOrder = await Order.create({ userId, items, totalAmount, paymentId });
     res.status(201).json({ success: true, message: "Order confirmed", order: newOrder });
-
   } catch (error) {
-    console.error("Confirm Order Error:", error);
     res.status(500).json({ message: "Failed to confirm order" });
   }
 };
+
 
 
 const getOrdersByUser = async (req, res) => {
