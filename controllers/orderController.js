@@ -5,26 +5,35 @@ const User = require("../models/User");
 const TempOrder = require("../models/TempOrder");
 
 const placeOrder = async (req, res) => {
-  const { razorpay_order_id } = req.body;
-
   try {
-    const tempOrder = await TempOrder.findOne({ razorpay_order_id, status: "verified" });
+    const { razorpay_order_id } = req.body;
+    console.log("Received request to place order with Razorpay Order ID:", razorpay_order_id);
 
-    if (!tempOrder) {
-      return res.status(404).json({ success: false, message: "Verified order not found" });
+    // Fetch the TempOrder using the Razorpay Order ID
+    const tempOrders = await TempOrder.find({ razorpay_order_id });
+    if (!tempOrders || tempOrders.length === 0) {
+      console.error("No temporary order found for Razorpay Order ID:", razorpay_order_id);
+      return res.status(404).json({ success: false, message: "No temporary order found" });
     }
 
-    // Create the final order using TempOrder data
+    console.log("Temp orders found:", tempOrders);
+
+    // Create a final order
     const finalOrder = await Order.create({
       userId: req.user.id,
-      items: tempOrder.items, // Retrieve product details from TempOrder
-      totalAmount: tempOrder.amount,
+      items: tempOrders.map((item) => ({
+        productId: item.productId,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      totalAmount: tempOrders.reduce((total, item) => total + item.price * item.quantity, 0),
     });
 
-    console.log("Order placed successfully:", finalOrder);
+    console.log("Final order created successfully:", finalOrder);
 
-    // Delete TempOrder after successful order placement
-    await TempOrder.deleteOne({ razorpay_order_id });
+    // Delete TempOrder after creating the final order
+    await TempOrder.deleteMany({ razorpay_order_id });
 
     res.json({
       success: true,
@@ -32,8 +41,8 @@ const placeOrder = async (req, res) => {
       order: finalOrder,
     });
   } catch (error) {
-    console.error("Error placing order:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Error in placeOrder:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
