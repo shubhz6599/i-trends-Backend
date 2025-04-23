@@ -6,46 +6,34 @@ const TempOrder = require("../models/TempOrder");
 
 const placeOrder = async (req, res) => {
   try {
-    const { razorpay_order_id, paymentId } = req.body; // Expect paymentId from the frontend
-    console.log("Step 1: Received Razorpay Order ID:", razorpay_order_id);
-
-    if (!razorpay_order_id) {
-      return res.status(400).json({ success: false, message: "Missing Razorpay Order ID" });
-    }
+    const { razorpay_order_id } = req.body;
+    console.log("Received request to place order with Razorpay Order ID:", razorpay_order_id);
 
     // Fetch the TempOrder using the Razorpay Order ID
     const tempOrders = await TempOrder.find({ razorpay_order_id });
-    console.log("Step 2: Temporary Orders Retrieved:", tempOrders);
-
     if (!tempOrders || tempOrders.length === 0) {
       console.error("No temporary order found for Razorpay Order ID:", razorpay_order_id);
       return res.status(404).json({ success: false, message: "No temporary order found" });
     }
 
-    // Map the order items and calculate the total amount
-    const orderItems = tempOrders.map((item) => ({
-      productId: item.productId, // Must be the ObjectId of the Product
-      quantity: item.quantity,
-      price: item.price,
-    }));
-    console.log("Step 3: Order Items to be Placed:", orderItems);
+    console.log("Temp orders found:", tempOrders);
 
-    const totalAmount = tempOrders.reduce((total, item) => total + item.price * item.quantity, 0);
-    console.log("Step 4: Total Amount Calculated:", totalAmount);
-
-    // Create the final order
+    // Create a final order
     const finalOrder = await Order.create({
-      userId: req.user.id, // Attach the user ID from the authenticated user
-      items: orderItems,
-      totalAmount,
-      paymentId, // Save the payment ID for reference
-      status: 'processing', // Default status
+      userId: req.user.id,
+      items: tempOrders.map((item) => ({
+        productId: item.productId,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      })),
+      totalAmount: tempOrders.reduce((total, item) => total + item.price * item.quantity, 0),
     });
-    console.log("Step 5: Final Order Placed:", finalOrder);
+
+    console.log("Final order created successfully:", finalOrder);
 
     // Delete TempOrder after creating the final order
     await TempOrder.deleteMany({ razorpay_order_id });
-    console.log("Step 6: Temporary Orders Deleted");
 
     res.json({
       success: true,
@@ -57,6 +45,7 @@ const placeOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
+
 
 const getMyOrders = async (req, res) => {
   try {
