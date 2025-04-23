@@ -8,10 +8,10 @@ const orderSchema = new mongoose.Schema({
       name: { type: String, required: true },
       price: { type: Number, required: true },
       quantity: { type: Number, required: true },
-      variant: { type: String }, // Optional
-      imageUrl: { type: String }, // Optional
-      mainOption: { type: String }, // Optional
-      subOption: { type: String }, // Optional
+      variant: { type: String },
+      imageUrl: { type: String },
+      mainOption: { type: String },
+      subOption: { type: String },
     },
   ],
   totalAmount: { type: Number, required: true },
