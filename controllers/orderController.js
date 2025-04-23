@@ -5,26 +5,24 @@ const User = require("../models/User");
 const TempOrder = require("../models/TempOrder");
 
 const placeOrder = async (req, res) => {
+  const { razorpay_order_id, paymentId } = req.body;
+
+  if (!razorpay_order_id || !paymentId) {
+    return res.status(400).json({ success: false, message: "Missing required fields: razorpay_order_id or paymentId" });
+  }
+
   try {
-    const { razorpay_order_id, paymentId } = req.body; // Extract order ID and payment ID from the request
+    console.log("Step 1: Received Razorpay Order ID:", razorpay_order_id);
+    console.log("Step 2: Received Payment ID:", paymentId);
 
-    // Validation
-    if (!razorpay_order_id || !paymentId) {
-      return res.status(400).json({ success: false, message: 'Missing required fields: razorpay_order_id or paymentId' });
-    }
-
-    console.log('Step 1: Received Razorpay Order ID:', razorpay_order_id);
-    console.log('Step 2: Received Payment ID:', paymentId);
-
-    // Fetch TempOrder entries related to this Razorpay Order ID
-    const tempOrders = await TempOrder.find({ razorpay_order_id, status: 'verified' }); // Only fetch verified temp orders
+    // Fetch verified TempOrder entries related to the Razorpay Order ID
+    const tempOrders = await TempOrder.find({ razorpay_order_id, status: "verified" });
 
     if (!tempOrders || tempOrders.length === 0) {
-      console.error('No verified temporary orders found for Razorpay Order ID:', razorpay_order_id);
-      return res.status(404).json({ success: false, message: 'No verified temporary orders found' });
+      return res.status(404).json({ success: false, message: "No verified temporary orders found" });
     }
 
-    console.log('Step 3: Verified TempOrders Retrieved:', tempOrders);
+    console.log("Step 3: Verified TempOrders Retrieved:", tempOrders);
 
     // Map TempOrder data to match the Order schema
     const orderItems = tempOrders.map((item) => ({
@@ -32,44 +30,47 @@ const placeOrder = async (req, res) => {
       name: item.name,
       price: item.price,
       quantity: item.quantity,
-      variant: item.variant, // Optional
-      imageUrl: item.imageUrl, // Optional
-      mainOption: item.mainOption, // Optional
-      subOption: item.subOption, // Optional
+      variant: item.variant,
+      imageUrl: item.imageUrl,
+      mainOption: item.mainOption,
+      subOption: item.subOption,
     }));
 
-    console.log('Step 4: Order Items Mapped:', orderItems);
+    console.log("Step 4: Order Items Mapped:", orderItems);
 
-    // Calculate total amount for the order
+    // Calculate the total amount
     const totalAmount = tempOrders.reduce((total, item) => total + item.price * item.quantity, 0);
-    console.log('Step 5: Total Amount Calculated:', totalAmount);
+    console.log("Step 5: Total Amount Calculated:", totalAmount);
 
-    // Create the final order in the database
+    // Create the final order
     const finalOrder = await Order.create({
       userId: req.user.id, // Attach authenticated user's ID
       items: orderItems,
       totalAmount,
       paymentId, // Save payment ID for reference
-      status: 'processing', // Default status
-      createdAt: new Date(),
+      status: "processing",
     });
 
-    console.log('Step 6: Final Order Created:', finalOrder);
+    console.log("Step 6: Final Order Created:", finalOrder);
 
-    // Cleanup: Delete the TempOrder entries related to this Razorpay Order ID
+    // Delete TempOrder entries related to the Razorpay Order ID
     await TempOrder.deleteMany({ razorpay_order_id });
-    console.log('Step 7: TempOrders Deleted');
+    console.log("Step 7: TempOrders Deleted");
 
     res.json({
       success: true,
-      message: 'Order placed successfully',
+      message: "Order placed successfully",
       order: finalOrder,
     });
   } catch (error) {
-    console.error('Error in placeOrder:', error);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
+    console.error("Error in placeOrder:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
+
+
+
+
 const getMyOrders = async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.user.id }).sort({ createdAt: -1 });
