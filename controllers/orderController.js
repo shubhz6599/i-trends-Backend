@@ -68,6 +68,28 @@ const placeOrder = async (req, res) => {
   }
 };
 
+const confirmOrder = async (req, res) => {
+  try {
+    const { paymentId, totalAmount, items } = req.body;
+    const userId = req.user._id;
+
+    const newOrder = new Order({
+      userId,
+      items,
+      paymentId,
+      totalAmount,
+    });
+
+    await newOrder.save();
+    await Cart.findOneAndDelete({ userId });
+
+    res.status(201).json({ message: 'Order placed successfully', order: newOrder });
+  } catch (error) {
+    console.error('Confirm Order Error:', error);
+    res.status(500).json({ message: 'Failed to confirm order' });
+  }
+};
+
 const getOrdersByUser = async (req, res) => {
   try {
     const userId = req.user.id; // Get the logged-in user's ID from the token (middleware should decode this)
@@ -150,6 +172,7 @@ const trackOrder = async (req, res) => {
 
 module.exports = {
   placeOrder,
+  confirmOrder,
   getOrdersByUser,
   getOrderDetailsById,
   getMyOrders,

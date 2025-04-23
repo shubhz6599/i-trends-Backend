@@ -21,7 +21,11 @@ const orderSchema = new mongoose.Schema({
     enum: ['processing', 'confirmed', 'shipped', 'deliveryday', 'complete'],
     default: 'processing',
   },
+  shippedTo: { type: String }, // optional, used when status is 'shipped'
+  deliveryDate: { type: Date }, // set when status = deliveryday
+  deliveredAt: { type: Date },  // set when status = complete
   createdAt: { type: Date, default: Date.now },
 });
+
 
 module.exports = mongoose.model('Order', orderSchema);
