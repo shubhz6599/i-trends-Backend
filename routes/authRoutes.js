@@ -23,6 +23,6 @@ router.post("/resendOtp", resendOtp); // Resend OTP API
 router.get("/user", authenticate, getUserDetails); // Get user details
 router.put("/user", authenticate, updateUserDetails); // Update user details
 router.post("/create-order", authenticate, createOrder); // Update user details
-router.post("/verify-payment", verifyPayment); // Update user details
+router.post("/verify-payment",authenticate, verifyPayment); // Update user details
 
 module.exports = router;
