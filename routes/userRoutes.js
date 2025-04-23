@@ -1,6 +1,6 @@
 const express = require('express');
 const { getCart, addToCart, removeFromCart } = require('../controllers/cartController.js');
-const { placeOrder, getMyOrders, trackOrder } = require('../controllers/orderController.js');
+const { placeOrder,getOrdersByUser, getOrderDetailsById, getMyOrders, trackOrder } = require('../controllers/orderController.js');
 const { submitFeedback, getMyFeedback } = require('../controllers/feedbackController.js');
 const { getAllOrders, getAllFeedback, exportOrdersToExcel, updateOrderStatus } = require('../controllers/adminController.js');
 const authenticate = require('../middleware/authMiddleware.js');
@@ -14,6 +14,8 @@ router.post('/cart', authenticate, addToCart);
 router.delete('/cart', authenticate, removeFromCart);
 
 router.post('/order', authenticate, placeOrder);
+router.get('/user-orders', authenticate, getOrdersByUser);
+router.get('/:orderId', authenticate, getOrderDetailsById);
 router.get('/orders', authenticate, getMyOrders);
 router.get('/track/:orderId', authenticate, trackOrder);
 
