@@ -68,9 +68,64 @@ const placeOrder = async (req, res) => {
   }
 };
 
+const getOrdersByUser = async (req, res) => {
+  try {
+    const userId = req.user.id; // Get the logged-in user's ID from the token (middleware should decode this)
 
+    // Fetch all orders for the user
+    const orders = await Order.find({ userId }).select('-__v -createdAt'); // Exclude unnecessary fields
 
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ success: false, message: 'No orders found for this user' });
+    }
 
+    res.json({ success: true, orders });
+  } catch (error) {
+    console.error('Error fetching user orders:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
+
+const getOrderDetailsById = async (req, res) => {
+  try {
+    const { orderId } = req.params; // Extract orderId from the request parameters
+
+    // Fetch the order by ID
+    const order = await Order.findById(orderId)
+      .populate('userId', 'name email phone address') // Populate user details
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    res.json({
+      success: true,
+      order: {
+        user: {
+          name: order.userId.name,
+          email: order.userId.email,
+          phone: order.userId.phone,
+          address: order.userId.address,
+        },
+        items: order.items.map((item) => ({
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          features: item.features,
+          imageUrl: item.imageUrl,
+          quantity: item.quantity,
+        })),
+        totalAmount: order.totalAmount,
+        paymentId: order.paymentId,
+        status: order.status,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching order details:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
 const getMyOrders = async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.user.id }).sort({ createdAt: -1 });
