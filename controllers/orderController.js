@@ -6,34 +6,52 @@ const TempOrder = require("../models/TempOrder");
 
 const placeOrder = async (req, res) => {
   try {
-    const { razorpay_order_id } = req.body;
-    console.log("Received request to place order with Razorpay Order ID:", razorpay_order_id);
+    const { razorpay_order_id, paymentId } = req.body; // Razorpay Order ID and Payment ID
 
-    // Fetch the TempOrder using the Razorpay Order ID
-    const tempOrders = await TempOrder.find({ razorpay_order_id });
-    if (!tempOrders || tempOrders.length === 0) {
-      console.error("No temporary order found for Razorpay Order ID:", razorpay_order_id);
-      return res.status(404).json({ success: false, message: "No temporary order found" });
+    if (!razorpay_order_id || !paymentId) {
+      console.error("Missing required fields: razorpay_order_id or paymentId");
+      return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
-    console.log("Temp orders found:", tempOrders);
+    console.log("Step 1: Received Razorpay Order ID:", razorpay_order_id);
 
-    // Create a final order
+    // Fetch TempOrder data using Razorpay Order ID
+    const tempOrders = await TempOrder.find({ razorpay_order_id });
+    if (!tempOrders || tempOrders.length === 0) {
+      console.error("No temporary orders found for Razorpay Order ID:", razorpay_order_id);
+      return res.status(404).json({ success: false, message: "No temporary orders found" });
+    }
+
+    console.log("Step 2: Temporary Orders Retrieved:", tempOrders);
+
+    // Map TempOrder data to the items structure in Order schema
+    const orderItems = tempOrders.map((item) => ({
+      productId: item.productId, // Referenced Product ID
+      quantity: item.quantity,
+      price: item.price,
+    }));
+
+    console.log("Step 3: Order Items Mapped:", orderItems);
+
+    // Calculate Total Amount
+    const totalAmount = tempOrders.reduce((total, item) => total + item.price * item.quantity, 0);
+    console.log("Step 4: Total Amount Calculated:", totalAmount);
+
+    // Create the Order in the database
     const finalOrder = await Order.create({
-      userId: req.user.id,
-      items: tempOrders.map((item) => ({
-        productId: item.productId,
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price,
-      })),
-      totalAmount: tempOrders.reduce((total, item) => total + item.price * item.quantity, 0),
+      userId: req.user.id, // Attach the user ID from the authenticated user
+      items: orderItems,
+      totalAmount,
+      paymentId, // Save the payment ID for reference
+      status: "processing", // Default status
+      createdAt: new Date(),
     });
 
-    console.log("Final order created successfully:", finalOrder);
+    console.log("Step 5: Final Order Placed:", finalOrder);
 
-    // Delete TempOrder after creating the final order
+    // Delete TempOrder entries after successful order creation
     await TempOrder.deleteMany({ razorpay_order_id });
+    console.log("Step 6: Temporary Orders Deleted");
 
     res.json({
       success: true,
@@ -45,7 +63,6 @@ const placeOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
-
 
 const getMyOrders = async (req, res) => {
   try {
