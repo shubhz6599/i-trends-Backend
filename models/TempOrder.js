@@ -1,18 +1,11 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const tempOrderSchema = new mongoose.Schema({
   razorpay_order_id: { type: String, required: true },
-  items: [
-    {
-      productId: { type: String, required: true },
-      name: { type: String, required: true },
-      price: { type: Number, required: true },
-      quantity: { type: Number, required: true },
-    },
-  ],
-  amount: { type: Number, required: true },
-  status: { type: String, default: "created" }, // "created", "verified", etc.
-  createdAt: { type: Date, default: Date.now },
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true }, // Referenced Product ID
+  name: { type: String, required: true },
+  quantity: { type: Number, required: true },
+  price: { type: Number, required: true },
 });
 
-module.exports = mongoose.model("TempOrder", tempOrderSchema);
+module.exports = mongoose.model('TempOrder', tempOrderSchema);
