@@ -256,19 +256,12 @@ const createOrder = async (req, res) => {
 
 
 const verifyPayment = async (req, res) => {
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount } = req.body;
+    console.log("Request received for payment verification:", req.body);
 
-    // Log incoming data
-    console.log("Incoming payment data:", {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-    });
-
-    // Validate required fields
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      console.error("Missing required fields");
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
@@ -281,33 +274,33 @@ const verifyPayment = async (req, res) => {
     console.log("Generated Signature:", generatedSignature);
     console.log("Received Signature:", razorpay_signature);
 
-    if (generatedSignature !== razorpay_signature) {
+    if (generatedSignature === razorpay_signature) {
+      console.log("Payment verified successfully");
+
+      // Update temporary order status to "verified"
+      const tempOrder = await TempOrder.findOne({ razorpay_order_id });
+
+      if (!tempOrder) {
+        return res.status(404).json({ success: false, message: "Order not found" });
+      }
+
+      tempOrder.status = "verified"; // Update status to "verified"
+      await tempOrder.save();
+
+      res.json({
+        success: true,
+        message: "Payment verified successfully",
+        order: tempOrder,
+      });
+    } else {
       console.error("Signature mismatch!");
       return res.status(400).json({ success: false, message: "Invalid payment signature" });
-    }
-
-    const payment = new Payment({
-      order_id: razorpay_order_id,
-      payment_id: razorpay_payment_id,
-      signature: razorpay_signature,
-      amount,
-      status: "Success",
-    });
-
-    try {
-      const savedPayment = await payment.save();
-      console.log("Payment saved successfully:", savedPayment);
-      res.json({ success: true, message: "Payment verified successfully" });
-    } catch (error) {
-      console.error("Error saving payment:", error);
-      res.status(500).json({ success: false, message: "Failed to save payment to database" });
     }
   } catch (error) {
     console.error("Error in verifyPayment:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 
 module.exports = {
   signup,
