@@ -6,6 +6,7 @@ const sendEmail = require("../utils/sendEmail");
 const otpCache = require("../utils/otpCache");
 const Payment = require("../models/payment")
 const razorpayInstance = require("../middleware/razorPayInstance")
+const TempOrder = require("../models/TempOrder")
 
 const signup = async (req, res) => {
   const { name, email, password, dob, mobile } = req.body;
@@ -218,20 +219,37 @@ const updateUserDetails = async (req, res) => {
   }
 };
 
-
 const createOrder = async (req, res) => {
+  const { items, amount } = req.body; // Receive product details and amount from frontend
+
+  if (!items || items.length === 0) {
+    return res.status(400).json({ success: false, message: "No items provided for order" });
+  }
+
   const paymentOptions = {
-      amount: req.body.amount * 100, // Convert to smallest currency unit (e.g., paise)
-      currency: "INR",
-      receipt: "receipt_" + new Date().getTime(),
-      payment_capture: 1 // Auto-capture payment
+    amount: amount * 100, // Convert to smallest currency unit (e.g., paise for INR)
+    currency: "INR",
+    receipt: "receipt_" + new Date().getTime(),
+    payment_capture: 1, // Auto-capture payment
   };
 
   try {
-      const response = await razorpayInstance.orders.create(paymentOptions);
-      res.json({ success: true, order: response });
+    const razorpayResponse = await razorpayInstance.orders.create(paymentOptions);
+
+    // Store Razorpay order ID and product details temporarily in the database
+    const tempOrder = {
+      razorpay_order_id: razorpayResponse.id, // Razorpay Order ID
+      items, // Store product details
+      amount,
+      status: "created", // Initially set status as "created"
+    };
+
+    await TempOrder.create(tempOrder); // Save to TempOrder collection
+
+    res.json({ success: true, order: razorpayResponse });
   } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+    console.error("Error creating order:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
