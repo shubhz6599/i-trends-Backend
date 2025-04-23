@@ -238,46 +238,57 @@ const createOrder = async (req, res) => {
 
 
 const verifyPayment = async (req, res) => {
-  const {
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature,
-    cartItems,     
-    amount
-  } = req.body;
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount } = req.body;
 
-  const generatedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-    .update(razorpay_order_id + "|" + razorpay_payment_id)
-    .digest('hex');
+    // Log incoming data
+    console.log("Incoming payment data:", {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    });
 
-  if (generatedSignature === razorpay_signature) {
-    // Save Payment Info (optional)
+    // Validate required fields
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      console.error("Missing required fields");
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    // Generate signature
+    const generatedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(razorpay_order_id + "|" + razorpay_payment_id)
+      .digest("hex");
+
+    console.log("Generated Signature:", generatedSignature);
+    console.log("Received Signature:", razorpay_signature);
+
+    if (generatedSignature !== razorpay_signature) {
+      console.error("Signature mismatch!");
+      return res.status(400).json({ success: false, message: "Invalid payment signature" });
+    }
+
     const payment = new Payment({
       order_id: razorpay_order_id,
       payment_id: razorpay_payment_id,
       signature: razorpay_signature,
       amount,
-      status: "Success"
+      status: "Success",
     });
-    await payment.save();
 
-    // Save Order Info
-    const order = new Order({
-      userId: req.user._id,       // ⬅️ assumes you're using `authenticate` middleware
-      items: cartItems,
-      totalAmount: amount,
-      status: "processing",
-      paymentId: razorpay_payment_id
-    });
-    await order.save();
-
-    return res.json({ success: true, message: "Payment verified and order saved" });
-  } else {
-    return res.status(400).json({ success: false, message: "Invalid payment signature" });
+    try {
+      const savedPayment = await payment.save();
+      console.log("Payment saved successfully:", savedPayment);
+      res.json({ success: true, message: "Payment verified successfully" });
+    } catch (error) {
+      console.error("Error saving payment:", error);
+      res.status(500).json({ success: false, message: "Failed to save payment to database" });
+    }
+  } catch (error) {
+    console.error("Error in verifyPayment:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 
 
 module.exports = {
