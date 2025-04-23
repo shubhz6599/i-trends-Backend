@@ -71,24 +71,28 @@ const placeOrder = async (req, res) => {
 const confirmOrder = async (req, res) => {
   try {
     const { paymentId, totalAmount, items } = req.body;
-    const userId = req.user._id;
+    const userId = req.user._id; // from authenticate middleware
 
-    const newOrder = new Order({
+    if (!paymentId || !totalAmount || !items || items.length === 0) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const newOrder = await Order.create({
       userId,
       items,
-      paymentId,
       totalAmount,
+      paymentId,
+      status: "processing"
     });
 
-    await newOrder.save();
-    await Cart.findOneAndDelete({ userId });
+    res.status(201).json({ success: true, message: "Order confirmed", order: newOrder });
 
-    res.status(201).json({ message: 'Order placed successfully', order: newOrder });
   } catch (error) {
-    console.error('Confirm Order Error:', error);
-    res.status(500).json({ message: 'Failed to confirm order' });
+    console.error("Confirm Order Error:", error);
+    res.status(500).json({ message: "Failed to confirm order" });
   }
 };
+
 
 const getOrdersByUser = async (req, res) => {
   try {
@@ -131,12 +135,14 @@ const getOrderDetailsById = async (req, res) => {
           address: order.userId.address,
         },
         items: order.items.map((item) => ({
+          productId:item.productId,
           name: item.name,
-          description: item.description,
           price: item.price,
+          quantity: item.quantity,
+          variant: item.variant,
+          description: item.description,
           features: item.features,
           imageUrl: item.imageUrl,
-          quantity: item.quantity,
         })),
         totalAmount: order.totalAmount,
         paymentId: order.paymentId,
