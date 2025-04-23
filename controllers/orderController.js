@@ -2,39 +2,40 @@ const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const sendEmail = require('../utils/sendEmail');
 const User = require("../models/User");
+const TempOrder = require("../models/TempOrder");
 
 const placeOrder = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id); // 👈 Get full user including email
-    if (!user) return res.status(404).json({ message: 'User not found' });
+  const { razorpay_order_id } = req.body;
 
-    const cart = await Cart.findOne({ userId: req.user.id });
-    if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ message: 'Cart is empty' });
+  try {
+    const tempOrder = await TempOrder.findOne({ razorpay_order_id, status: "verified" });
+
+    if (!tempOrder) {
+      return res.status(404).json({ success: false, message: "Verified order not found" });
     }
 
-    const totalAmount = cart.items.reduce((total, i) => {
-      const price = Number(i.discountedPrice ?? i.price ?? i.actualPrice ?? 0);
-      const qty = Number(i.quantity ?? 1);
-      return total + price * qty;
-    }, 0);
-
-    const order = await Order.create({
+    // Create the final order using TempOrder data
+    const finalOrder = await Order.create({
       userId: req.user.id,
-      items: cart.items,
-      totalAmount,
+      items: tempOrder.items, // Retrieve product details from TempOrder
+      totalAmount: tempOrder.amount,
     });
 
-    await Cart.deleteOne({ userId: req.user.id });
+    console.log("Order placed successfully:", finalOrder);
 
-    await sendEmail(user.email, 'Order Placed', `<h3>Your order has been placed!</h3>`);
-    res.json(order);
+    // Delete TempOrder after successful order placement
+    await TempOrder.deleteOne({ razorpay_order_id });
+
+    res.json({
+      success: true,
+      message: "Order placed successfully",
+      order: finalOrder,
+    });
   } catch (error) {
-    console.error('Error placing order:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error("Error placing order:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 
 
 const getMyOrders = async (req, res) => {
