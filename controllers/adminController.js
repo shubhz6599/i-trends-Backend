@@ -1,6 +1,8 @@
 const Feedback = require("../models/Feedback.js");
 const Order = require("../models/Order.js");
 const xlsx = require('xlsx');
+const fs = require('fs');
+
 
 const getAllOrders = async (req, res) => {
   try {
@@ -16,7 +18,7 @@ const getAllOrders = async (req, res) => {
 
     // Filter by user name (case-insensitive)
     if (userName) {
-      query['userId.name'] = { $regex: userName, $options: 'i' };
+      query.userId = { $regex: userName, $options: 'i' }; // Use regex for case-insensitive match
     }
 
     // Filter by date range
@@ -32,16 +34,14 @@ const getAllOrders = async (req, res) => {
 
     // Fetch orders with full user and product details
     const orders = await Order.find(query)
-      .populate('userId') // Populate all fields of the User document
-      .populate('items.productId') // Populate all fields of the Product document
+      .populate('userId', 'name email phone address') // Populate user details
       .sort({ createdAt: -1 }); // Sort by newest orders first
 
-    res.json(orders);
+    res.json({ success: true, orders });
   } catch (error) {
     console.error('Error fetching orders:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-
 };
 
 const getAllFeedback = async (req, res) => {
@@ -58,13 +58,13 @@ const getAllFeedback = async (req, res) => {
 
     // Filter by user name (case-insensitive)
     if (userName) {
-      query['userId.name'] = { $regex: userName, $options: 'i' };
+      query.userId = { $regex: userName, $options: 'i' }; // Use regex for case-insensitive match
     }
 
     // Fetch feedback with full user details
-    const feedback = await Feedback.find(query).populate('userId');
+    const feedback = await Feedback.find(query).populate('userId', 'name email phone'); // Populate user details
 
-    res.json(feedback);
+    res.json({ success: true, feedback });
   } catch (error) {
     console.error('Error fetching feedback:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -85,7 +85,7 @@ const exportOrdersToExcel = async (req, res) => {
 
     // Filter by user name (case-insensitive)
     if (userName) {
-      query['userId.name'] = { $regex: userName, $options: 'i' };
+      query.userId = { $regex: userName, $options: 'i' };
     }
 
     // Filter by date range
@@ -101,18 +101,18 @@ const exportOrdersToExcel = async (req, res) => {
 
     // Fetch orders with full user and product details
     const orders = await Order.find(query)
-      .populate('userId') // Fetch full user details
-      .populate('items.productId'); // Fetch full product details
+      .populate('userId', 'name email phone') // Fetch full user details
+      .sort({ createdAt: -1 });
 
     // Map orders into a format suitable for Excel
-    const data = orders.map(o => ({
+    const data = orders.map((o) => ({
       OrderID: o._id,
       UserName: o.userId.name,
       UserEmail: o.userId.email,
       TotalAmount: o.totalAmount,
-      Items: o.items.map(item => `${item.productId.name} (x${item.quantity})`).join(', '),
+      Items: o.items.map((item) => `${item.name} (${item.quantity})`).join(', '),
       Status: o.status,
-      CreatedAt: o.createdAt,
+      CreatedAt: o.createdAt.toISOString(),
     }));
 
     // Create Excel sheet
@@ -125,7 +125,7 @@ const exportOrdersToExcel = async (req, res) => {
     xlsx.writeFile(wb, filePath);
 
     // Send file for download
-    res.download(filePath, 'orders.xlsx', err => {
+    res.download(filePath, 'orders.xlsx', (err) => {
       if (err) {
         console.error('Error sending file:', err);
       }
@@ -137,6 +137,7 @@ const exportOrdersToExcel = async (req, res) => {
   }
 };
 
+
 const updateOrderStatus = async (req, res) => {
   const { orderId } = req.params;
   const { status } = req.body;
@@ -146,12 +147,22 @@ const updateOrderStatus = async (req, res) => {
 
     // Update current city if status starts with "shippedto"
     if (status.startsWith('shippedto')) {
-      update.currentCity = status.replace('shippedto', '');
+      update.shippedTo = status.replace('shippedto', '');
+    }
+
+    // Set delivery date if status is "deliveryday"
+    if (status === 'deliveryday') {
+      update.deliveryDate = new Date();
+    }
+
+    // Set deliveredAt date if status is "complete"
+    if (status === 'complete') {
+      update.deliveredAt = new Date();
     }
 
     // Find and update the order
     const order = await Order.findByIdAndUpdate(orderId, update, { new: true })
-      .populate('userId') // Populate user details
+      .populate('userId', 'name email phone') // Populate user details
       .populate('items.productId'); // Populate product details
 
     // If order is not found
@@ -165,9 +176,9 @@ const updateOrderStatus = async (req, res) => {
         <h3>Your order is out for delivery!</h3>
         <p>Here are the details of your order:</p>
         <ul>
-          ${order.items.map(i => `<li>${i.productId.name} - Quantity: ${i.quantity}</li>`).join('')}
+          ${order.items.map((i) => `<li>${i.name} - Quantity: ${i.quantity}</li>`).join('')}
         </ul>
-        <p>Total Amount: $${order.totalAmount}</p>
+        <p>Total Amount: ₹${order.totalAmount}</p>
       `;
       await sendEmail(order.userId.email, 'Your Order is Out for Delivery', emailBody);
     }
@@ -178,7 +189,6 @@ const updateOrderStatus = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
-
 
 module.exports = {
   getAllOrders,
