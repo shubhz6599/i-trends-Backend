@@ -120,6 +120,7 @@ const login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
     if (adminCode && adminCode === process.env.ADMIN_SECRET_CODE) {
+      console.log(123)
       user.isAdmin = true;
       await user.save(); // update isAdmin in DB
     }
