@@ -68,6 +68,8 @@ const placeOrder = async (req, res) => {
   }
 };
 
+const sendOrderPlacedMail = require("../utils/sendOrderPlacedMail");
+
 const confirmOrder = async (req, res) => {
   try {
     const { paymentId, totalAmount, items } = req.body;
@@ -79,11 +81,19 @@ const confirmOrder = async (req, res) => {
     }
 
     const newOrder = await Order.create({ userId, items, totalAmount, paymentId });
+
+    // ✅ Populate user to access email and name
+    await newOrder.populate("userId", "name email");
+
+    // ✅ Send order placed mail
+    await sendOrderPlacedMail(newOrder);
+
     res.status(201).json({ success: true, message: "Order confirmed", order: newOrder });
   } catch (error) {
     res.status(500).json({ message: "Failed to confirm order" });
   }
 };
+
 
 
 
