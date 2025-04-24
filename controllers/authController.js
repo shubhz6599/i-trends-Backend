@@ -111,13 +111,19 @@ const resendOtp = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password,adminCode  } = req.body;
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+
+    if (adminCode && adminCode === process.env.ADMIN_SECRET_CODE) {
+      user.isAdmin = true;
+      await user.save(); // update isAdmin in DB
+    }
+
 
     const token = jwt.sign(
       { id: user._id, isAdmin: user.isAdmin }, // ✅ Add this

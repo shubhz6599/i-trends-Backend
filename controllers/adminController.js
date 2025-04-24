@@ -7,8 +7,6 @@ const sendDeliveryMail = require("../utils/sendOrderPlacedMail");
 
 const getAllOrders = async (req, res) => {
   try {
-    console.log('came to here==============================>1');
-
     if (!req.user.isAdmin) return res.status(403).json({ msg: "Access denied" });
 
     const { from, to, userId, email, phone } = req.query;
@@ -21,8 +19,6 @@ const getAllOrders = async (req, res) => {
         $lte: new Date(new Date(to).setHours(23, 59, 59, 999))
       };
     }
-    console.log('came to here==============================>2');
-
     // Filter by userId, email, or phone if provided
     if (userId || email || phone) {
       const userQuery = {}; // Initialize a query object for users
@@ -36,8 +32,6 @@ const getAllOrders = async (req, res) => {
       filters.userId = { $in: userIds }; // Filter orders based on matched users
     }
 
-    console.log('came to here==============================>3');
-
     // Fetch orders based on the filters, or all if no filters
     const orders = await Order.find(filters)
       .populate("userId", "name email phone") // Updated populate path
@@ -46,7 +40,6 @@ const getAllOrders = async (req, res) => {
     // Send the response with the filtered orders and total count
     res.status(200).json({ total: orders.length, orders });
   } catch (err) {
-    console.error("getAllOrders error", err); // Log the error for debugging
     res.status(500).json({ msg: "Something went wrong" }); // Send generic error message
   }
 };
