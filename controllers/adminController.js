@@ -7,41 +7,51 @@ const sendDeliveryMail = require("../utils/sendOrderPlacedMail");
 
 const getAllOrders = async (req, res) => {
   try {
+    console.log('came to here==============================>1');
+
     if (!req.user.isAdmin) return res.status(403).json({ msg: "Access denied" });
 
     const { from, to, userId, email, phone } = req.query;
-    const filters = {};
+    const filters = {}; // Initialize an empty filter object
 
-    // Filter by date range
+    // Filter by date range if 'from' and 'to' are provided
     if (from && to) {
       filters.createdAt = {
         $gte: new Date(new Date(from).setHours(0, 0, 0, 0)),
         $lte: new Date(new Date(to).setHours(23, 59, 59, 999))
       };
     }
+    console.log('came to here==============================>2');
 
-    // Filter by userId or email/phone
+    // Filter by userId, email, or phone if provided
     if (userId || email || phone) {
-      const userQuery = {};
+      const userQuery = {}; // Initialize a query object for users
       if (userId) userQuery._id = userId;
-      if (email) userQuery.email = { $regex: new RegExp(email, "i") };
-      if (phone) userQuery.phone = { $regex: new RegExp(phone, "i") };
+      if (email) userQuery.email = { $regex: new RegExp(email, "i") };  // Case-insensitive search
+      if (phone) userQuery.phone = { $regex: new RegExp(phone, "i") };  // Case-insensitive search
 
+      // Fetch users based on the search terms
       const users = await User.find(userQuery);
       const userIds = users.map(u => u._id);
-      filters.user = { $in: userIds };
+      filters.userId = { $in: userIds }; // Filter orders based on matched users
     }
 
-    const orders = await Order.find(filters)
-      .populate("user", "name email phone")
-      .sort({ createdAt: -1 });
+    console.log('came to here==============================>3');
 
+    // Fetch orders based on the filters, or all if no filters
+    const orders = await Order.find(filters)
+      .populate("userId", "name email phone") // Updated populate path
+      .sort({ createdAt: -1 }); // Sort orders by creation date, descending
+
+    // Send the response with the filtered orders and total count
     res.status(200).json({ total: orders.length, orders });
   } catch (err) {
-    console.error("getAllOrders error", err);
-    res.status(500).json({ msg: "Something went wrong" });
+    console.error("getAllOrders error", err); // Log the error for debugging
+    res.status(500).json({ msg: "Something went wrong" }); // Send generic error message
   }
 };
+
+
 
 const getAllFeedback = async (req, res) => {
   try {
@@ -80,11 +90,11 @@ const exportOrdersToExcel = async (req, res) => {
 
       const users = await User.find(userQuery);
       const userIds = users.map(u => u._id);
-      filters.user = { $in: userIds };
+      filters.userId = { $in: userIds };
     }
 
-    const orders = await Order.find(filters)
-      .populate("user", "name email phone");
+    const orders = await Order.find(filters).populate("userId", "name email phone");
+
 
     const workbook = new exceljs.Workbook();
     const sheet = workbook.addWorksheet("Orders");
@@ -102,9 +112,10 @@ const exportOrdersToExcel = async (req, res) => {
     orders.forEach(order => {
       sheet.addRow({
         _id: order._id,
-        name: order.user?.name || "N/A",
-        email: order.user?.email || "N/A",
-        phone: order.user?.phone || "N/A",
+        name: order.userId?.name || "N/A",
+        email: order.userId?.email || "N/A",
+        phone: order.userId?.phone || "N/A",
+
         total: order.total,
         status: order.status,
         createdAt: order.createdAt.toLocaleString()
@@ -125,13 +136,14 @@ const updateOrderStatus = async (req, res) => {
   try {
     if (!req.user.isAdmin) return res.status(403).json({ msg: "Access denied" });
 
-    const { orderId, status } = req.body;
+    const orderId = req.body.orderId || req.params.orderId;
+    const status = req.body.status;
 
     if (!orderId || !status) {
       return res.status(400).json({ msg: "Order ID and status are required" });
     }
 
-    const order = await Order.findById(orderId).populate("user", "name email");
+    const order = await Order.findById(orderId).populate("userId", "name email");
 
     if (!order) return res.status(404).json({ msg: "Order not found" });
 

@@ -2,9 +2,8 @@ const express = require('express');
 const { getCart, addToCart, removeFromCart } = require('../controllers/cartController.js');
 const { placeOrder,confirmOrder,getOrdersByUser, getOrderDetailsById, getMyOrders, trackOrder } = require('../controllers/orderController.js');
 const { submitFeedback, getMyFeedback } = require('../controllers/feedbackController.js');
-const { getAllOrders, getAllFeedback, exportOrdersToExcel, updateOrderStatus } = require('../controllers/adminController.js');
 const authenticate = require('../middleware/authMiddleware.js');
-const isAdmin = require('../middleware/isAdmin');
+
 
 const router = express.Router();
 
@@ -25,11 +24,7 @@ router.get('/feedback', authenticate, getMyFeedback);
 
 // admin
 
-router.get('/orders', authenticate, getAllOrders);
-router.get('/feedback', authenticate, getAllFeedback);
-router.post('/export', authenticate, exportOrdersToExcel);
-// router.put('/order-status/:orderId', updateOrderStatus);
-router.put('/order-status/:orderId', authenticate, updateOrderStatus);
+
 
 
 module.exports = router;
