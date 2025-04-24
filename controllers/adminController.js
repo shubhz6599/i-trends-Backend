@@ -3,8 +3,45 @@ const Order = require("../models/Order.js");
 const xlsx = require('xlsx');
 
 const getAllOrders = async (req, res) => {
-  const orders = await Order.find().populate('userId', 'name email');
-  res.json(orders);
+  try {
+    const { fromDate, toDate, userId, userName } = req.query;
+
+    // Build the query object
+    const query = {};
+
+    // Filter by user ID
+    if (userId) {
+      query.userId = userId;
+    }
+
+    // Filter by user name (case-insensitive)
+    if (userName) {
+      query['userId.name'] = { $regex: userName, $options: 'i' };
+    }
+
+    // Filter by date range
+    if (fromDate || toDate) {
+      query.createdAt = {};
+      if (fromDate) {
+        query.createdAt.$gte = new Date(fromDate); // Greater than or equal to fromDate
+      }
+      if (toDate) {
+        query.createdAt.$lte = new Date(toDate); // Less than or equal to toDate
+      }
+    }
+
+    // Fetch orders with full user and product details
+    const orders = await Order.find(query)
+      .populate('userId') // Populate all fields of the User document
+      .populate('items.productId') // Populate all fields of the Product document
+      .sort({ createdAt: -1 }); // Sort by newest orders first
+
+    res.json(orders);
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+
 };
 
 const getAllFeedback = async (req, res) => {
