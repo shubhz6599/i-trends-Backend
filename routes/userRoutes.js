@@ -25,11 +25,11 @@ router.get('/feedback', authenticate, getMyFeedback);
 
 // admin
 
-router.get('/orders', authenticate, isAdmin, getAllOrders);
-router.get('/feedback', authenticate, isAdmin, getAllFeedback);
-router.post('/export', authenticate, isAdmin, exportOrdersToExcel);
+router.get('/orders', authenticate, getAllOrders);
+router.get('/feedback', authenticate, getAllFeedback);
+router.post('/export', authenticate, exportOrdersToExcel);
 // router.put('/order-status/:orderId', updateOrderStatus);
-router.put('/order-status/:orderId', authenticate, isAdmin, updateOrderStatus);
+router.put('/order-status/:orderId', authenticate, updateOrderStatus);
 
 
 module.exports = router;
