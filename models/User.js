@@ -37,7 +37,14 @@ const userSchema = new mongoose.Schema({
   },
   isAdmin: { type: Boolean, default: false },
   resetToken: String,
-  resetTokenExpiry: Date
+  resetTokenExpiry: Date,
+  address: {
+    street: { type: String },
+    landmark: { type: String },
+    city: { type: String },
+    state: { type: String },
+    pincode: { type: String }
+  }
 });
 
 module.exports = mongoose.model("User", userSchema);
