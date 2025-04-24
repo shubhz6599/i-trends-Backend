@@ -39,7 +39,7 @@ const placeOrder = async (req, res) => {
     console.log("Step 4: Order Items Mapped:", orderItems);
 
     // Calculate the total amount
-    const totalAmount = tempOrders.reduce((total, item) => total + item.price * item.quantity, 0);
+    const totalAmount = tempOrders.reduce((total, item) =>  item.price);
     console.log("Step 5: Total Amount Calculated:", totalAmount);
 
     // Create the final order
