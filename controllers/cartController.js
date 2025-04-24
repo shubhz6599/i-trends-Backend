@@ -16,24 +16,44 @@ const getCart = async (req, res) => {
   res.json(cartWithDetails || []);
 };
 
- const addToCart = async (req, res) => {
-  const { productId, name, quantity, img, actualPrice, discountedPrice, ratings, description } = req.body; // Include `img` in the request body
-  let cart = await Cart.findOne({ userId: req.user.id });
-  if (!cart) cart = new Cart({ userId: req.user.id, items: [] });
+const addToCart = async (req, res) => {
+  try {
+    const { productId, name, quantity, img, actualPrice, discountedPrice, ratings, description } = req.body; // Extract product details from the request body
+    let cart = await Cart.findOne({ userId: req.user.id }); // Find the cart for the logged-in user
 
-  const itemIndex = cart.items.findIndex((i) => i.productId === productId);
-  if (itemIndex > -1) {
-    // Update quantity if the product already exists in the cart
-    cart.items[itemIndex].quantity += quantity;
-  } else {
-    // Add new product to the cart
+    if (!cart) {
+      // If no cart exists for the user, create a new cart
+      cart = new Cart({ userId: req.user.id, items: [] });
+    }
+
+    // Check if the product already exists in the user's cart
+    const itemIndex = cart.items.findIndex((i) => i.productId === productId);
+
+    if (itemIndex > -1) {
+      // If the product already exists in the cart, return a validation error
+      return res.status(400).json({
+        success: false,
+        message: "Product is already in your cart.",
+      });
+    }
+
+    // Add the new product to the cart
     cart.items.push({ productId, name, quantity, img, actualPrice, discountedPrice, ratings, description });
+
+    await cart.save(); // Save the updated cart
+    res.json({
+      success: true,
+      message: "Product added to cart successfully.",
+      cart,
+    });
+  } catch (error) {
+    console.error("Error adding product to cart:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while adding the product to the cart.",
+    });
   }
-
-  await cart.save();
-  res.json(cart);
 };
-
 const removeFromCart = async (req, res) => {
   const { productId } = req.body;
   let cart = await Cart.findOne({ userId: req.user.id });
