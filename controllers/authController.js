@@ -124,7 +124,7 @@ const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, address:user.address } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -191,6 +191,7 @@ const getUserDetails = async (req, res) => {
         phone: user.mobile, // Include phone number
         isOtpVerified: user.isOtpVerified,
         resendOtpCount: user.resendOtpCount,
+        address:user.address
       },
       isOtpVerified: user.isOtpVerified // Include OTP verification status
     });
