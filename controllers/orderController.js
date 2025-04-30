@@ -1,6 +1,5 @@
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
-const sendEmail = require('../utils/sendEmail');
 const User = require("../models/User");
 const TempOrder = require("../models/TempOrder");
 
@@ -34,6 +33,7 @@ const placeOrder = async (req, res) => {
       imageUrl: item.imageUrl,
       mainOption: item.mainOption,
       subOption: item.subOption,
+      productType:item.productType
     }));
 
     console.log("Step 4: Order Items Mapped:", orderItems);
@@ -73,6 +73,11 @@ const sendOrderPlacedMail = require("../utils/sendOrderPlacedMail");
 const confirmOrder = async (req, res) => {
   try {
     const { paymentId, totalAmount, items } = req.body;
+    items.forEach((item) => {
+      if (item.productType === 'contact-lens' && !item.userSelectionDetails) {
+        return res.status(400).json({ message: 'Contact lens must have userSelectionDetails' });
+      }
+    });
     const userId = req.user._id;
 
     const existingOrder = await Order.findOne({ paymentId });
@@ -138,7 +143,7 @@ const getOrderDetailsById = async (req, res) => {
           address: order.userId.address,
         },
         items: order.items.map((item) => ({
-          productId:item.productId,
+          productId: item.productId,
           name: item.name,
           price: item.price,
           quantity: item.quantity,

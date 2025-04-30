@@ -12,6 +12,15 @@ const orderSchema = new mongoose.Schema({
       imageUrl: { type: String },
       mainOption: { type: String },
       subOption: { type: String },
+      productType: {
+        type: String,
+        enum: ['specs', 'eyewear', 'contact-lens'],
+        required: true,
+      },
+      userSelectionDetails: {
+        type: mongoose.Schema.Types.Mixed, // Store contact lens details here
+        required: false,
+      },
     },
   ],
   totalAmount: { type: Number, required: true },
