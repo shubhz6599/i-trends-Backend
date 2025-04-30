@@ -33,7 +33,8 @@ const placeOrder = async (req, res) => {
       imageUrl: item.imageUrl,
       mainOption: item.mainOption,
       subOption: item.subOption,
-      productType:item.productType
+      productType:item.productType,
+      userSelectionDetails: item.userSelectionDetails || null
     }));
 
     console.log("Step 4: Order Items Mapped:", orderItems);
@@ -151,7 +152,8 @@ const getOrderDetailsById = async (req, res) => {
           description: item.description,
           features: item.features,
           imageUrl: item.imageUrl,
-          productType:item.productType
+          productType:item.productType,
+          userSelectionDetails: item.userSelectionDetails || null
         })),
         totalAmount: order.totalAmount,
         paymentId: order.paymentId,

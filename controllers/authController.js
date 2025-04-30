@@ -94,7 +94,7 @@ const resendOtp = async (req, res) => {
     user.otpExpiry = Date.now() + 300000; // OTP valid for 5 minutes
     user.resendOtpCount += 1;
     user.lastResendTimestamp = new Date();
-    
+
     await user.save();
 
     // Send OTP via email
@@ -111,7 +111,7 @@ const resendOtp = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const { email, password,adminCode  } = req.body;
+  const { email, password, adminCode } = req.body;
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -131,7 +131,7 @@ const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, address:user.address } });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, address: user.address } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -190,7 +190,7 @@ const getUserDetails = async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
 
     res.json({
-       user: {
+      user: {
         _id: user._id,
         name: user.name,
         email: user.email,
@@ -198,7 +198,7 @@ const getUserDetails = async (req, res) => {
         mobile: user.mobile, // Include mobile number
         isOtpVerified: user.isOtpVerified,
         resendOtpCount: user.resendOtpCount,
-        address:user.address
+        address: user.address
       },
       isOtpVerified: user.isOtpVerified // Include OTP verification status
     });
@@ -270,7 +270,8 @@ const createOrder = async (req, res) => {
       subOption: item.subOption,
       amount, // Total order amount
       status: "created",
-      productType:item.productType
+      productType: item.productType,
+      userSelectionDetails: item.userSelectionDetails || null
     }));
 
     await TempOrder.insertMany(tempOrders); // Save all items in TempOrder collection

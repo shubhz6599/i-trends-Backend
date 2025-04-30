@@ -18,6 +18,10 @@ const tempOrderSchema = new mongoose.Schema({
     enum: ['specs', 'eyewear', 'contact-lens'],
     required: true,
   },
+  userSelectionDetails: {
+    type: mongoose.Schema.Types.Mixed, // Store contact lens details here
+    required: false,
+  }
 });
 
 module.exports = mongoose.model('TempOrder', tempOrderSchema);
