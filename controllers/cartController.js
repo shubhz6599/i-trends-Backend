@@ -19,7 +19,7 @@ const getCart = async (req, res) => {
 };
 
 const addToCart = async (req, res) => {
-  const { userId, productId, name, price, quantity, imageUrl, actualPrice, discountedPrice, ratings, description } = req.body;
+  const { userId, productId,productType, name, price, quantity, imageUrl, actualPrice, discountedPrice, ratings, description } = req.body;
 
   try {
     // Find the cart for the user
@@ -40,6 +40,7 @@ const addToCart = async (req, res) => {
       // Add a new product to the cart
       cart.items.push({
         productId,
+        productType,
         name,
         price,
         quantity,
