@@ -126,7 +126,7 @@ const getOrderDetailsById = async (req, res) => {
 
     // Fetch the order by ID
     const order = await Order.findById(orderId)
-      .populate('userId', 'name email phone address') // Populate user details
+      .populate('userId', 'name email mobile address') // Populate user details
       .lean();
 
     if (!order) {
@@ -139,7 +139,7 @@ const getOrderDetailsById = async (req, res) => {
         user: {
           name: order.userId.name,
           email: order.userId.email,
-          phone: order.userId.phone,
+          mobile: order.userId.mobile,
           address: order.userId.address,
         },
         items: order.items.map((item) => ({
@@ -151,6 +151,7 @@ const getOrderDetailsById = async (req, res) => {
           description: item.description,
           features: item.features,
           imageUrl: item.imageUrl,
+          productType:item.productType
         })),
         totalAmount: order.totalAmount,
         paymentId: order.paymentId,

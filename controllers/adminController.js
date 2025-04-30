@@ -9,7 +9,7 @@ const getAllOrders = async (req, res) => {
   try {
     if (!req.user.isAdmin) return res.status(403).json({ msg: "Access denied" });
 
-    const { from, to, userId, email, phone } = req.query;
+    const { from, to, userId, email, mobile } = req.query;
     const filters = {}; // Initialize an empty filter object
 
     // Filter by date range if 'from' and 'to' are provided
@@ -19,12 +19,12 @@ const getAllOrders = async (req, res) => {
         $lte: new Date(new Date(to).setHours(23, 59, 59, 999))
       };
     }
-    // Filter by userId, email, or phone if provided
-    if (userId || email || phone) {
+    // Filter by userId, email, or mobile if provided
+    if (userId || email || mobile) {
       const userQuery = {}; // Initialize a query object for users
       if (userId) userQuery._id = userId;
       if (email) userQuery.email = { $regex: new RegExp(email, "i") };  // Case-insensitive search
-      if (phone) userQuery.phone = { $regex: new RegExp(phone, "i") };  // Case-insensitive search
+      if (mobile) userQuery.mobile = { $regex: new RegExp(mobile, "i") };  // Case-insensitive search
 
       // Fetch users based on the search terms
       const users = await User.find(userQuery);
@@ -34,7 +34,7 @@ const getAllOrders = async (req, res) => {
 
     // Fetch orders based on the filters, or all if no filters
     const orders = await Order.find(filters)
-      .populate("userId", "name email phone") // Updated populate path
+      .populate("userId", "name email mobile") // Updated populate path
       .sort({ createdAt: -1 }); // Sort orders by creation date, descending
 
     // Send the response with the filtered orders and total count
@@ -51,7 +51,7 @@ const getAllFeedback = async (req, res) => {
     if (!req.user.isAdmin) return res.status(403).json({ msg: "Access denied" });
 
     const feedbacks = await Feedback.find({})
-      .populate("user", "name email phone")
+      .populate("user", "name email mobile")
       .sort({ createdAt: -1 });
 
     res.status(200).json({ total: feedbacks.length, feedbacks });
@@ -65,7 +65,7 @@ const exportOrdersToExcel = async (req, res) => {
   try {
     if (!req.user.isAdmin) return res.status(403).json({ msg: "Access denied" });
 
-    const { from, to, userId, email, phone } = req.query;
+    const { from, to, userId, email, mobile } = req.query;
     const filters = {};
 
     if (from && to) {
@@ -75,18 +75,18 @@ const exportOrdersToExcel = async (req, res) => {
       };
     }
 
-    if (userId || email || phone) {
+    if (userId || email || mobile) {
       const userQuery = {};
       if (userId) userQuery._id = userId;
       if (email) userQuery.email = { $regex: new RegExp(email, "i") };
-      if (phone) userQuery.phone = { $regex: new RegExp(phone, "i") };
+      if (mobile) userQuery.mobile = { $regex: new RegExp(mobile, "i") };
 
       const users = await User.find(userQuery);
       const userIds = users.map(u => u._id);
       filters.userId = { $in: userIds };
     }
 
-    const orders = await Order.find(filters).populate("userId", "name email phone");
+    const orders = await Order.find(filters).populate("userId", "name email mobile");
 
 
     const workbook = new exceljs.Workbook();
@@ -96,7 +96,7 @@ const exportOrdersToExcel = async (req, res) => {
       { header: "Order ID", key: "_id", width: 30 },
       { header: "User Name", key: "name", width: 20 },
       { header: "Email", key: "email", width: 25 },
-      { header: "Phone", key: "phone", width: 15 },
+      { header: "mobile", key: "mobile", width: 15 },
       { header: "Total", key: "total", width: 15 },
       { header: "Status", key: "status", width: 20 },
       { header: "Date", key: "createdAt", width: 25 }
@@ -107,7 +107,7 @@ const exportOrdersToExcel = async (req, res) => {
         _id: order._id,
         name: order.userId?.name || "N/A",
         email: order.userId?.email || "N/A",
-        phone: order.userId?.phone || "N/A",
+        mobile: order.userId?.mobile || "N/A",
 
         total: order.total,
         status: order.status,

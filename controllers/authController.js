@@ -195,7 +195,7 @@ const getUserDetails = async (req, res) => {
         name: user.name,
         email: user.email,
         dob: user.dob, // Include date of birth
-        phone: user.mobile, // Include phone number
+        mobile: user.mobile, // Include mobile number
         isOtpVerified: user.isOtpVerified,
         resendOtpCount: user.resendOtpCount,
         address:user.address
