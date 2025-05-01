@@ -27,7 +27,7 @@ const orderSchema = new mongoose.Schema({
   paymentId: { type: String, required: true },
   status: {
     type: String,
-    enum: ['processing', 'confirmed', 'shipped', 'deliveryday', 'complete'],
+    enum: ['processing', 'confirmed', 'shippedtopune', 'deliveryday', 'complete'],
     default: 'processing',
   },
   shippedTo: { type: String }, // optional, used when status is 'shipped'
