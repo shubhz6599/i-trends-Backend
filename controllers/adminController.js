@@ -2,7 +2,7 @@ const User = require("../models/User");
 const Feedback = require("../models/Feedback.js");
 const Order = require("../models/Order.js");
 const exceljs = require("exceljs");
-
+const sendOrderStatusMail = require('../utils/orderStatusMail')
 const getAllOrders = async (req, res) => {
   try {
     if (!req.user.isAdmin) return res.status(403).json({ msg: "Access denied" });
