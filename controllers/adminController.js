@@ -3,7 +3,7 @@ const Feedback = require("../models/Feedback.js");
 const Order = require("../models/Order.js");
 const exceljs = require("exceljs");
 const sendDeliveryMail = require("../utils/sendOrderPlacedMail");
-
+const sendMailDeliveryDay = require("../utils/sendMailDeliveryDay");
 
 const getAllOrders = async (req, res) => {
   try {
@@ -143,8 +143,11 @@ const updateOrderStatus = async (req, res) => {
     order.status = status;
     await order.save();
 
-    if (status === "deliveryday") {
+    if (status === "confirmed") {
       await sendDeliveryMail(order);
+    }
+    if (status === "deliveryday") {
+      await sendMailDeliveryDay(order);
     }
 
     res.status(200).json({ msg: "Status updated", order });
