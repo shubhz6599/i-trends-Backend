@@ -10,7 +10,7 @@ const sendEmail = async (to, subject, html) => {
   });
 
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: `"i-Trends" <${process.env.EMAIL_USER}>`,
     to,
     subject,
     html
