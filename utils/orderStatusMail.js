@@ -44,7 +44,7 @@ const sendOrderStatusMail = async (order, status) => {
   `;
 
   await transporter.sendMail({
-    from: `"My E-Commerce" <${process.env.EMAIL_USER}>`,
+    from: `"i-trends" <${process.env.EMAIL_USER}>`,
     to: order.userId.email,
     subject,
     html

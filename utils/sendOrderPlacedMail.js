@@ -25,7 +25,7 @@ const sendOrderPlacedMail = async (order) => {
   `;
 
   await transporter.sendMail({
-    from: `"My E-Commerce" <${process.env.EMAIL_USER}>`,
+    from: `"i-trends" <${process.env.EMAIL_USER}>`,
     to: order.userId.email,
     subject: "🎉 Your Order is Confirmed!",
     html
