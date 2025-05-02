@@ -5,19 +5,23 @@ const cartSchema = new mongoose.Schema({
   items: [
     {
       productId: String,
-      productType:String,
+      productType: String,
       name: String,
       price: Number,
       quantity: Number,
       img: String,
-      actualPrice: String, 
-      discountedPrice: String, 
-      ratings: String, 
-      description: String
+      actualPrice: String,
+      discountedPrice: String,
+      ratings: String,
+      description: String,
+      userSelectionDetails: {
+        type: mongoose.Schema.Types.Mixed, // Store contact lens details here
+        required: false,
+      },
     },
   ],
 });
 
-  
+
 
 module.exports = mongoose.model('Cart', cartSchema);
