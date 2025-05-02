@@ -241,11 +241,7 @@ const createOrder = async (req, res) => {
     return res.status(400).json({ success: false, message: "No items provided for order" });
   }
 
-  items.forEach((item) => {
-    if (item.productType === 'contact-lens' && !item.userSelectionDetails) {
-      return res.status(400).json({ message: 'Contact lens must have userSelectionDetails' });
-    }
-  });
+
 
   const paymentOptions = {
     amount: amount * 100, // Convert to smallest currency unit (e.g., paise for INR)

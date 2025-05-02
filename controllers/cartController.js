@@ -19,7 +19,7 @@ const getCart = async (req, res) => {
 };
 
 const addToCart = async (req, res) => {
-  const { userId, productId,productType, name, price, quantity, imageUrl, actualPrice, discountedPrice, ratings, description } = req.body;
+  const { userId, productId,productType, name, price, quantity, imageUrl, actualPrice, discountedPrice, ratings, description,userSelectionDetails } = req.body;
 
   try {
     // Find the cart for the user

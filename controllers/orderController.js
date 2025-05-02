@@ -74,11 +74,7 @@ const sendOrderPlacedMail = require("../utils/sendOrderPlacedMail");
 const confirmOrder = async (req, res) => {
   try {
     const { paymentId, totalAmount, items } = req.body;
-    items.forEach((item) => {
-      if (item.productType === 'contact-lens' && !item.userSelectionDetails) {
-        return res.status(400).json({ message: 'Contact lens must have userSelectionDetails' });
-      }
-    });
+ 
     const userId = req.user._id;
 
     const existingOrder = await Order.findOne({ paymentId });
