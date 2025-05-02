@@ -48,7 +48,8 @@ const addToCart = async (req, res) => {
         actualPrice: actualPrice || price, // Fallback to price if actualPrice is not provided
         discountedPrice: discountedPrice || price, // Fallback to price if discountedPrice is not provided
         ratings: ratings || '4.5', // Default rating if not provided
-        description: description || 'A high-quality product.', // Default description if not provided
+        description: description || 'A high-quality product.', // Default description if not provided,
+        userSelectionDetails
       });
     }
 
