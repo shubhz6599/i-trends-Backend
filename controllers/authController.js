@@ -131,7 +131,7 @@ const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, address: user.address } });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, address: user.address,isAdmin:user.isAdmin } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
