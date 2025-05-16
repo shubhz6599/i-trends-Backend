@@ -3,7 +3,7 @@ const nodemailer = require("nodemailer");
 const statusSubjects = {
   processing: "🛒 Your Order is Processing",
   confirmed: "✅ Your Order is Confirmed",
-  shippedtopune: "🚚 Your Order Has Been Shipped to Pune",
+  shipped: "🚚 Your Order Has Been Shipped to Nearest Courier Center",
   deliveryday: "📦 Out for Delivery Today!",
   complete: "🎉 Order Delivered Successfully"
 };
@@ -11,7 +11,7 @@ const statusSubjects = {
 const statusMessages = {
   processing: "We have received your order and it's now being processed.",
   confirmed: "Your order has been confirmed and will be packed soon.",
-  shippedtopune: "Your order has been shipped and is on its way to Pune.",
+  shipped: "Your order has been shipped to nearest courier center and is on its way to.",
   deliveryday: "Your order is out for delivery today. Keep your phone nearby!",
   complete: "Your order has been delivered. We hope you love it!"
 };
