@@ -11,8 +11,9 @@ const TempOrder = require("../models/TempOrder")
 const signup = async (req, res) => {
   const { name, email, password, dob, mobile } = req.body;
   try {
-    const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ message: "User already exists" });
+    const existingEmail = await User.findOne({ email });
+    const existingPhone = await User.findOne({ mobile });
+    if (existingEmail || existingPhone) return res.status(400).json({ message: "User already exists" });
 
     const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
     const otpExpiry = Date.now() + 5 * 60 * 1000; // 5 min
