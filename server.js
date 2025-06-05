@@ -10,7 +10,7 @@ connectDB();
 
 const app = express();
 const corsOptions = {
-    origin: "https://itrendss.com", // Allow all origins (not recommended for production)
+    origin: "*", // Allow all origins (not recommended for production)
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
     allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
 };
