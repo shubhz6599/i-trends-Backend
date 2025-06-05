@@ -149,7 +149,7 @@ const forgotPassword = async (req, res) => {
     user.resetTokenExpiry = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    const resetLink = `https://i-trends-85dd4.web.app/reset-password/${token}`;
+    const resetLink = `https://itrendss.com/reset-password/${token}`;
     await sendEmail(user.email, "Reset Password", `<p>Reset your password <a href="${resetLink}">here</a></p>`);
 
     res.json({ message: "Password reset email sent" });
